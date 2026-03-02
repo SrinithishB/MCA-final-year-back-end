@@ -1,0 +1,214 @@
+[
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "rfidTag",
+          "type": "string"
+        }
+      ],
+      "name": "DrugAdded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "rfidTag",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "status",
+          "type": "bool"
+        }
+      ],
+      "name": "DrugCompromised",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "_rfidTag",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_drugName",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_batchNumber",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_manufacturerName",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_manufactureDate",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_expiryDate",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_description",
+          "type": "string"
+        },
+        {
+          "internalType": "bool",
+          "name": "_requiresColdStorage",
+          "type": "bool"
+        },
+        {
+          "internalType": "bool",
+          "name": "_isCompromised",
+          "type": "bool"
+        },
+        {
+          "internalType": "int256",
+          "name": "_temperatureMin",
+          "type": "int256"
+        },
+        {
+          "internalType": "int256",
+          "name": "_temperatureMax",
+          "type": "int256"
+        },
+        {
+          "internalType": "int256",
+          "name": "_humidityMax",
+          "type": "int256"
+        }
+      ],
+      "name": "addDrug",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getAllTags",
+      "outputs": [
+        {
+          "internalType": "string[]",
+          "name": "",
+          "type": "string[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "_rfidTag",
+          "type": "string"
+        }
+      ],
+      "name": "getDrug",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "rfidTag",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "drugName",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "batchNumber",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "manufacturerName",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "manufactureDate",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "expiryDate",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "description",
+              "type": "string"
+            },
+            {
+              "internalType": "bool",
+              "name": "requiresColdStorage",
+              "type": "bool"
+            },
+            {
+              "internalType": "bool",
+              "name": "isCompromised",
+              "type": "bool"
+            },
+            {
+              "internalType": "int256",
+              "name": "temperatureMin",
+              "type": "int256"
+            },
+            {
+              "internalType": "int256",
+              "name": "temperatureMax",
+              "type": "int256"
+            },
+            {
+              "internalType": "int256",
+              "name": "humidityMax",
+              "type": "int256"
+            }
+          ],
+          "internalType": "struct DrugRegistry.Drug",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "_rfidTag",
+          "type": "string"
+        },
+        {
+          "internalType": "bool",
+          "name": "_status",
+          "type": "bool"
+        }
+      ],
+      "name": "setCompromised",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ]

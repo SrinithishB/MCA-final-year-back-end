@@ -1,104 +1,59 @@
 from flask import Blueprint, request, jsonify
-from datetime import datetime
-from config.db import drugs_collection
-from utils.serializer import serialize_doc
+from config.blockchain import w3, drug_contract, account
 
 drugs_bp = Blueprint("drugs", __name__)
 
 @drugs_bp.route("/api/drugs", methods=["POST"])
 def add_drug():
+
     data = request.json
 
-    required_fields = [
-        "rfidTag",
-        "drugName",
-        "batchNumber",
-        "manufacturerName",
-        "manufactureDate",
-        "expiryDate"
-    ]
+    tx = drug_contract.functions.addDrug(
+        data["rfidTag"],
+        data["drugName"],
+        data["batchNumber"],
+        data["manufacturerName"],
+        data["manufactureDate"],
+        data["expiryDate"],
+        data.get("description",""),
+        data.get("requiresColdStorage", False),
+        data.get("isCompromised", False),
+        int(data.get("temperatureMin", 0)),
+        int(data.get("temperatureMax", 0)),
+        int(data.get("humidityMax", 0))
+    ).transact({"from": account})
 
-    if not data or not all(field in data for field in required_fields):
-        return jsonify({
-            "success": False,
-            "message": "Missing required fields"
-        }), 400
+    w3.eth.wait_for_transaction_receipt(tx)
 
-    if drugs_collection.find_one({"rfidTag": data["rfidTag"]}):
-        return jsonify({
-            "success": False,
-            "message": "RFID already exists"
-        }), 409
-
-    try:
-        data["manufactureDate"] = datetime.strptime(
-            data["manufactureDate"], "%Y-%m-%d"
-        )
-        data["expiryDate"] = datetime.strptime(
-            data["expiryDate"], "%Y-%m-%d"
-        )
-    except ValueError:
-        return jsonify({
-            "success": False,
-            "message": "Invalid date format (YYYY-MM-DD required)"
-        }), 400
-
-    data.setdefault("description", "")
-    data.setdefault("requiresColdStorage", False)
-    data.setdefault("isCompromised", False)
-
-    if data["requiresColdStorage"]:
-        cold_fields = ["temperatureMin", "temperatureMax", "humidityMax"]
-
-        if not all(field in data for field in cold_fields):
-            return jsonify({
-                "success": False,
-                "message": "Cold storage drugs require temperatureMin, temperatureMax and humidityMax"
-            }), 400
-
-        try:
-            data["temperatureMin"] = float(data["temperatureMin"])
-            data["temperatureMax"] = float(data["temperatureMax"])
-            data["humidityMax"] = float(data["humidityMax"])
-        except ValueError:
-            return jsonify({
-                "success": False,
-                "message": "Temperature and humidity must be numeric values"
-            }), 400
-
-        if data["temperatureMin"] >= data["temperatureMax"]:
-            return jsonify({
-                "success": False,
-                "message": "temperatureMin must be less than temperatureMax"
-            }), 400
-
-        if not (0 <= data["humidityMax"] <= 100):
-            return jsonify({
-                "success": False,
-                "message": "humidityMax must be between 0 and 100"
-            }), 400
-    else:
-        data.pop("temperatureMin", None)
-        data.pop("temperatureMax", None)
-        data.pop("humidityMax", None)
-
-    data["addedDate"] = datetime.now()
-    data["lastUpdated"] = datetime.now()
-
-    result = drugs_collection.insert_one(data)
-    data["_id"] = str(result.inserted_id)
-
-    return jsonify({
-        "success": True,
-        "data": serialize_doc(data)
-    }), 201
+    return jsonify({"success": True})
 
 
 @drugs_bp.route("/api/drugs", methods=["GET"])
 def get_drugs():
-    drugs = [serialize_doc(d) for d in drugs_collection.find()]
+
+    tags = drug_contract.functions.getAllTags().call()
+
+    drugs = []
+
+    for tag in tags:
+        d = drug_contract.functions.getDrug(tag).call()
+
+        drugs.append({
+            "rfidTag": d[0],
+            "drugName": d[1],
+            "batchNumber": d[2],
+            "manufacturerName": d[3],
+            "manufactureDate": d[4],
+            "expiryDate": d[5],
+            "description": d[6],
+            "requiresColdStorage": d[7],
+            "isCompromised": d[8],
+            "temperatureMin": d[9],
+            "temperatureMax": d[10],
+            "humidityMax": d[11]
+        })
+
     return jsonify({
         "success": True,
-        "count": len(drugs),
         "drugs": drugs
     })

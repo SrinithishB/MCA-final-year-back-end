@@ -1,11 +1,13 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime
-from config.db import temp_logs_collection, drugs_collection
+from config.db import temp_logs_collection
+from config.blockchain import drug_contract, trace_contract, w3, account
 
 temperature_bp = Blueprint("temperature", __name__)
 
 @temperature_bp.route("/api/temperature", methods=["POST"])
 def receive_temperature():
+
     data = request.json or {}
 
     try:
@@ -20,6 +22,7 @@ def receive_temperature():
     storage_id = data.get("storageID", "UNKNOWN")
     rfid_tag = data.get("rfidTag")
 
+    # Always store log in MongoDB
     temp_logs_collection.insert_one({
         "timestamp": datetime.now(),
         "storageID": storage_id,
@@ -32,25 +35,41 @@ def receive_temperature():
     blink_red = False
 
     if rfid_tag:
-        drug = drugs_collection.find_one({"rfidTag": rfid_tag})
 
-        if drug and drug.get("requiresColdStorage"):
-            temp_min = drug.get("temperatureMin", 0)
-            temp_max = drug.get("temperatureMax", 100)
-            hum_max = drug.get("humidityMax", 100)
+        # Get drug limits from blockchain
+        drug = drug_contract.functions.getDrug(rfid_tag).call()
 
-            if temperature < temp_min or temperature > temp_max or humidity > hum_max:
-                is_violation = True
-                blink_red = True
+        requires_cold = drug[7]
+        temp_min = drug[9]
+        temp_max = drug[10]
+        hum_max = drug[11]
 
-                drugs_collection.update_one(
-                    {"rfidTag": rfid_tag},
-                    {"$set": {
-                        "isCompromised": True,
-                        "compromisedTimestamp": datetime.now(),
-                        "lastUpdated": datetime.now()
-                    }}
-                )
+        if requires_cold and (
+            temperature < temp_min or
+            temperature > temp_max or
+            humidity > hum_max
+        ):
+            is_violation = True
+            blink_red = True
+
+            # 1. Store violation on blockchain trace log
+            tx = trace_contract.functions.addLog(
+                rfid_tag,
+                storage_id,
+                int(temperature),
+                int(humidity),
+                True
+            ).transact({"from": account})
+
+            w3.eth.wait_for_transaction_receipt(tx)
+
+            # 2. Mark drug compromised in blockchain
+            tx2 = drug_contract.functions.setCompromised(
+                rfid_tag,
+                True
+            ).transact({"from": account})
+
+            w3.eth.wait_for_transaction_receipt(tx2)
 
     return jsonify({
         "success": True,
