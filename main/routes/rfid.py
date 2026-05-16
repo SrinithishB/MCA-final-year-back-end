@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime, timedelta
-from config.db import trace_logs_collection
+from config.db import trace_logs_collection, readers_collection
 from config.blockchain import (
     trace_contract,
     drug_contract,
@@ -9,6 +9,7 @@ from config.blockchain import (
     account
 )
 from utils.serializer import serialize_doc
+from utils.geolocation import get_city_from_ip
 
 rfid_bp = Blueprint("rfid", __name__)
 
@@ -44,6 +45,19 @@ def receive_rfid():
             location = reader[1]
         except Exception:
             location = "Unknown Location"
+
+        # Auto-detect city from IoT device IP and cache in MongoDB (only if not already set)
+        existing = readers_collection.find_one({"readerId": reader_id})
+        if not existing or not existing.get("city"):
+            client_ip = request.headers.get("X-Forwarded-For", request.remote_addr or "")
+            client_ip = client_ip.split(",")[0].strip()
+            city = get_city_from_ip(client_ip)
+            if city:
+                readers_collection.update_one(
+                    {"readerId": reader_id},
+                    {"$set": {"readerId": reader_id, "city": city}},
+                    upsert=True
+                )
 
         # ---------------- Counterfeit ----------------
         if not drug or drug[0] == "":

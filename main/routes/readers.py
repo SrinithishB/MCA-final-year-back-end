@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from config.blockchain import w3, reader_contract, account
+from config.db import readers_collection
 
 readers_bp = Blueprint("readers", __name__)
 
@@ -11,11 +12,13 @@ def get_readers():
     readers = []
     for rid in ids:
         r = reader_contract.functions.getReader(rid).call()
+        mongo_doc = readers_collection.find_one({"readerId": r[0]}) or {}
 
         readers.append({
             "readerId": r[0],
             "location": r[1],
-            "isActive": r[2]
+            "isActive": r[2],
+            "city": mongo_doc.get("city", "")
         })
 
     return jsonify({
@@ -38,19 +41,27 @@ def add_reader():
 
     w3.eth.wait_for_transaction_receipt(tx)
 
+    readers_collection.update_one(
+        {"readerId": data["readerId"]},
+        {"$set": {"readerId": data["readerId"], "city": data.get("city", "")}},
+        upsert=True
+    )
+
     return jsonify({"success": True})
 
 @readers_bp.route("/api/readers/<reader_id>", methods=["GET"])
 def get_reader(reader_id):
 
     r = reader_contract.functions.getReader(reader_id).call()
+    mongo_doc = readers_collection.find_one({"readerId": r[0]}) or {}
 
     return jsonify({
         "success": True,
         "reader": {
             "readerId": r[0],
             "location": r[1],
-            "isActive": r[2]
+            "isActive": r[2],
+            "city": mongo_doc.get("city", "")
         }
     })
 
@@ -67,6 +78,13 @@ def update_reader(reader_id):
     ).transact({"from": account})
 
     w3.eth.wait_for_transaction_receipt(tx)
+
+    if "city" in data:
+        readers_collection.update_one(
+            {"readerId": reader_id},
+            {"$set": {"city": data["city"]}},
+            upsert=True
+        )
 
     return jsonify({"success": True})
 

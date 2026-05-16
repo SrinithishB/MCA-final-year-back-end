@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from datetime import datetime
 from config.db import temp_logs_collection
 from config.blockchain import drug_contract, trace_contract, w3, account
+from utils.geolocation import get_city_from_ip
 
 temperature_bp = Blueprint("temperature", __name__)
 
@@ -22,13 +23,18 @@ def receive_temperature():
     storage_id = data.get("storageID", "UNKNOWN")
     rfid_tag = data.get("rfidTag")
 
+    client_ip = request.headers.get("X-Forwarded-For", request.remote_addr or "")
+    client_ip = client_ip.split(",")[0].strip()
+    city = get_city_from_ip(client_ip)
+
     # Always store log in MongoDB
     temp_logs_collection.insert_one({
         "timestamp": datetime.now(),
         "storageID": storage_id,
         "temperature": temperature,
         "humidity": humidity,
-        "rfidTag": rfid_tag
+        "rfidTag": rfid_tag,
+        "city": city
     })
 
     is_violation = False

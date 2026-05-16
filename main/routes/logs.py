@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from config.blockchain import trace_contract, drug_contract, reader_contract
-from config.db import temp_logs_collection
+from config.db import temp_logs_collection, readers_collection
 from utils.serializer import serialize_doc
 
 logs_bp = Blueprint("logs", __name__)
@@ -57,6 +57,8 @@ def get_trace_logs():
             except:
                 location = "Unknown Location"
 
+            mongo_doc = readers_collection.find_one({"readerId": reader_id}) or {}
+
             formatted_logs.append({
                 "rfidTag": rfid_tag,
                 "drugName": drug_name,
@@ -64,6 +66,7 @@ def get_trace_logs():
                 "manufacturer": manufacturer,
                 "readerID": reader_id,
                 "location": location,
+                "city": mongo_doc.get("city", ""),
                 "temperature": log[2],
                 "humidity": log[3],
                 "violated": log[4],
@@ -116,6 +119,8 @@ def get_trace_logs_by_rfid(rfid_tag):
                 except:
                     location = "Unknown Location"
 
+                mongo_doc = readers_collection.find_one({"readerId": reader_id}) or {}
+
                 filtered_logs.append({
                     "rfidTag": rfid_tag,
                     "drugName": drug_name,
@@ -123,6 +128,7 @@ def get_trace_logs_by_rfid(rfid_tag):
                     "manufacturer": manufacturer,
                     "readerID": reader_id,
                     "location": location,
+                    "city": mongo_doc.get("city", ""),
                     "temperature": log[2],
                     "humidity": log[3],
                     "violated": log[4],

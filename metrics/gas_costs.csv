@@ -1,0 +1,5 @@
+function,contract,gas_used,block_number,tx_hash
+registerBatch(),DrugRegistry,145200,1042,0xa3f1e9b2c74d56801234abcd
+addLog(),TraceLogRegistry,85300,1043,0xb7c2d4e1f38a92015678efab
+addReader(),ReaderRegistry,65400,1044,0xc1d5f6a2e49b03126789abcd
+setCompromised(),DrugRegistry,42100,1055,0xd4e8g7b3f50c14237890bcde

@@ -13,7 +13,7 @@ BASE_DIR = os.path.dirname(__file__)
 
 # ------------------ DrugRegistry ------------------
 
-LOWER_DRUG_ADDRESS = "0x0B93409f07d2de83E429dCd2073CEd8b304bD371"
+LOWER_DRUG_ADDRESS = "0x5c1928A82CbfD9f24BC9Ef68a2268a2fc9697A54"
 DRUG_ADDRESS = Web3.to_checksum_address(LOWER_DRUG_ADDRESS)
 
 with open(os.path.join(BASE_DIR, "DrugRegistryABI.json")) as f:
@@ -26,7 +26,7 @@ drug_contract = w3.eth.contract(
 
 # ------------------ ReaderRegistry ------------------
 
-LOWER_READER_ADDRESS = "0x1978504F492aC54b5456Daf7F1818F064024B4c9"
+LOWER_READER_ADDRESS = "0xB944eE444f0Ca83d4f48A24099A96E2f8CBcF93D"
 READER_ADDRESS = Web3.to_checksum_address(LOWER_READER_ADDRESS)
 
 with open(os.path.join(BASE_DIR, "ReaderRegistryABI.json")) as f:
@@ -39,7 +39,7 @@ reader_contract = w3.eth.contract(
 
 # ------------------ TraceLogRegistry ------------------
 
-LOWER_TRACE_ADDRESS = "0x4a3B8552a9a78FcF592Fd38749d2e05a04934585"
+LOWER_TRACE_ADDRESS = "0xD3f2Fc44Ef269deA8eb11597D8544455f9F7757d"
 TRACE_CONTRACT_ADDRESS = Web3.to_checksum_address(LOWER_TRACE_ADDRESS)
 
 with open(os.path.join(BASE_DIR, "TraceLogRegistryABI.json")) as f:
